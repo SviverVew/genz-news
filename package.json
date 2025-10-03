@@ -1,0 +1,39 @@
+{
+  "name": "app-cyclone",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"ts-node -r tsconfig-paths/register src/app.ts\" \"ts-node -r tsconfig-paths/register src/workers/EmailWorker.ts\"",
+    "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js",
+    "migration:run": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:run -d src/data-source.ts",
+    "migration:generate": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:generate src/migrations/InitUser -d src/data-source.ts",
+    "start": "concurrently \"node dist/app.js\" \"node dist/workers/EmailWorker.js\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/node": "^24.6.1",
+    "concurrently": "^9.2.1",
+    "nodemon": "^3.1.10",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "bull-board": "^1.7.2",
+    "bullmq": "^5.59.0",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "ioredis": "^5.8.0",
+    "jsonwebtoken": "^9.0.2",
+    "mysql2": "^3.15.1",
+    "nodemailer": "^7.0.6",
+    "reflect-metadata": "^0.2.2",
+    "routing-controllers": "^0.11.3",
+    "typedi": "^0.10.0",
+    "typeorm": "^0.3.27"
+  }
+}
