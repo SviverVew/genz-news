@@ -76,14 +76,14 @@ export class AuthService {
 
     // Access Token (hết hạn nhanh, 30s)
     const accessToken = jwt.sign(
-      { userId: user.userId },
+      { userId: user.userId , role: user.role},
       process.env.JWT_SECRET!,
       { expiresIn: "100s" }
     );
 
     // Refresh Token (hết hạn lâu hơn,5 ngày)
     const refreshToken = jwt.sign(
-      { userId: user.userId },
+      { userId: user.userId , role: user.role},
       process.env.JWT_REFRESH_SECRET!,
       { expiresIn: "5m" }
     );

@@ -13,7 +13,7 @@ export const AppDataSource = new DataSource({
   database: config.db.database,
   synchronize: false,   
   logging: false,
-  entities: [User, UserAdvance],
+  entities: [__dirname + "/entities/*.{ts,js}"],
   migrations: process.env.NODE_ENV === "production"
     ? ["dist/migrations/**/*.js"]
     : ["src/migrations/**/*.ts"],

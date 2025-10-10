@@ -11,7 +11,7 @@ import { Service } from "typedi";
 @Service()
 @JsonController("/users")
 export class UserController {
-  private userService = new UserService();
+  constructor(private userService:UserService) {}
   @Put("/:id")
   @UseBefore(AuthMiddleware)
   async update(@Param("id") id: number, @Body() body: UpdateUserDTO) {
