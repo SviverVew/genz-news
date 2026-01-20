@@ -17,6 +17,7 @@ export const emailWorker = new Worker(
     connection: {
       host: 'safe-molly-35788.upstash.io',
       port: 6379,
+      username: 'default',
       password: process.env.UPSTASH_REDIS_REST_TOKEN,
       tls: {},
     },
