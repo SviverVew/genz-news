@@ -5,8 +5,8 @@ import { AppDataSource } from "../data-source";
 import { User } from "../entities/UserEntity";
 import {redis} from "../utils/redisClient";
 import { emailQueue } from "../queues/EmailQueue"; 
-@Service()
 export class AuthService {
+  @Service()
   private userRepo = AppDataSource.getRepository(User);
 
   async register(data: Partial<User>) {

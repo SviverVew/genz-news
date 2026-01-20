@@ -10,9 +10,8 @@ import { plainToInstance } from "class-transformer";
 import { validateOrReject } from "class-validator";
 import { InjectRepository } from "typeorm-typedi-extensions";
 import { updateCache ,redis} from "../utils/redisClient";
-
-@Service()
 export class NewsService {
+  @Service()
   private newsRepo = AppDataSource.getRepository(News);
   private userRepo = AppDataSource.getRepository(User);
   private commentRepo = AppDataSource.getRepository(Comment);
