@@ -10,6 +10,8 @@
     "start": "concurrently \"node dist/app.js\" \"node dist/workers/EmailWorker.js\""
   },
   "keywords": [],
+  "build": "tsc",
+
   "author": "",
   "license": "ISC",
   "description": "",
