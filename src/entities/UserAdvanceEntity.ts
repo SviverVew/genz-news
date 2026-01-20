@@ -3,7 +3,7 @@ import {
   OneToOne, JoinColumn, CreateDateColumn, UpdateDateColumn
 } from "typeorm";
 import { User } from "./UserEntity";
-@Entity("UserAdvance")
+@Entity("useradvance")
 export class UserAdvance {
   @PrimaryColumn()
   userId: number;

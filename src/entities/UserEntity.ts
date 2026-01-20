@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 import { Exclude, Expose ,Type} from 'class-transformer';
 import { UserAdvance } from "./UserAdvanceEntity";
 import { News } from "./NewEntity";
-@Entity("User")
+@Entity("user")
 export class User {
   @PrimaryGeneratedColumn("uuid")
   @PrimaryGeneratedColumn()
