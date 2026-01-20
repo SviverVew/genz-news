@@ -63,8 +63,8 @@ export class UserService {
     );
 
     // Lưu token mới vào Redis
-    await redis.set(`accessToken:${accessToken}`, user.userId.toString(), "EX", 30);
-    await redis.set(`refreshToken:${refreshToken}`, user.userId.toString(), "EX", 5 * 60);
+    await redis.set(`accessToken:${accessToken}`, user.userId.toString(), { ex: 30 });
+    await redis.set(`refreshToken:${refreshToken}`, user.userId.toString(), { ex: 5 * 60 });
 
     return {
       message: "Password changed successfully",

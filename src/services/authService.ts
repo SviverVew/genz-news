@@ -47,7 +47,7 @@ export class AuthService {
   const pendingUserStr = await redis.get(`pendingUser:${email}`);
   if (!pendingUserStr) throw new Error("OTP expired or not found");
 
-  const pendingUser = JSON.parse(pendingUserStr);
+  const pendingUser = JSON.parse(pendingUserStr as string);
 
   if (pendingUser.otp !== otp) throw new Error("Invalid OTP");
 
@@ -87,8 +87,8 @@ export class AuthService {
       process.env.JWT_REFRESH_SECRET!,
       { expiresIn: "5m" }
     );
-      await redis.set(`accessToken:${accessToken}`, user.userId.toString(), "EX", 30);
-      await redis.set(`refreshToken:${refreshToken}`, user.userId.toString(), "EX", 60 * 5);
+      await redis.set(`accessToken:${accessToken}`, user.userId.toString(), { ex: 30 });
+      await redis.set(`refreshToken:${refreshToken}`, user.userId.toString(), { ex: 60 * 5 });
     return { name: user.name,
     email: user.email,
     accessToken,
@@ -106,11 +106,11 @@ export class AuthService {
 
     jwt.verify(refreshToken,process.env.JWT_REFRESH_SECRET!);
     const newAccessToken = jwt.sign(
-      { userId: parseInt(userId) },
+      { userId: parseInt(userId as string) },
       process.env.JWT_SECRET!,
       { expiresIn: "100s" }
     );
-    await redis.set(`accessToken:${newAccessToken}`, userId, "EX", 30);
+    await redis.set(`accessToken:${newAccessToken}`, userId, { ex: 30 });
     return { accessToken: newAccessToken };
   }
 

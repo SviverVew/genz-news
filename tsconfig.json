@@ -9,6 +9,7 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "useDefineForClassFields": false,
+    "skipLibCheck": true,
     "rootDir": "src",
   },
   "lib": ["es2015"]

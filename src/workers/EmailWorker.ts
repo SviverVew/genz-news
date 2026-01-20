@@ -14,6 +14,11 @@ export const emailWorker = new Worker(
     }
   },
   {
-    connection: redis.options,
+    connection: {
+      host: 'safe-molly-35788.upstash.io',
+      port: 6379,
+      password: process.env.UPSTASH_REDIS_REST_TOKEN,
+      tls: {},
+    },
   }
 );

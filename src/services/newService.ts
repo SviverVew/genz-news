@@ -41,7 +41,7 @@ export class NewsService {
     const saved = await this.newsRepo.save(news);
 
     // cache Redis
-    await redis.set(`news:${saved.newsId}`, JSON.stringify(saved), "EX", 60 * 60 * 24);
+    await redis.set(`news:${saved.newsId}`, JSON.stringify(saved), { ex: 60 * 60 * 24 });
 
     return saved;
   }
@@ -80,7 +80,7 @@ export class NewsService {
     let news: News | null;
 
     if (cached) {
-      news = JSON.parse(cached);
+      news = JSON.parse(cached as string);
     } else {
       // 2️⃣ Query DB nếu cache không có
       news = await this.newsRepo.findOne({
@@ -90,7 +90,7 @@ export class NewsService {
       if (!news) throw new Error("News not found");
 
       // Lưu cache 1 ngày
-      await redis.set(cacheKey, JSON.stringify(news), "EX", 60 * 60 * 24);
+      await redis.set(cacheKey, JSON.stringify(news), { ex: 60 * 60 * 24 });
     }
 
     // 3️⃣ Tăng viewCount
@@ -105,7 +105,7 @@ export class NewsService {
       .getCount();
 
     // 5️⃣ Cập nhật lại cache sau khi tăng viewCount
-    await redis.set(cacheKey, JSON.stringify(news), "EX", 60 * 60 * 24);
+    await redis.set(cacheKey, JSON.stringify(news), { ex: 60 * 60 * 24 });
 
     // 6️⃣ Trả về
     return {
