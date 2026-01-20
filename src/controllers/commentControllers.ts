@@ -3,12 +3,11 @@ import { CommentService } from "../services/commentService";
 import { AuthMiddleware } from "../middlewares/authMiddleware";
 import { User } from "../entities/UserEntity";
 import { Service } from "typedi";
-
+@Service()
 @JsonController("/comments")
 export class CommentController {
-
   private commentService = new CommentService();
-  @Service()
+
   // Tạo comment hoặc reply
   @Post("/:newsId")
   @UseBefore(AuthMiddleware)

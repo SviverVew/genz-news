@@ -4,8 +4,8 @@ import { User } from "../entities/UserEntity";
 import { News } from "../entities/NewEntity";
 import { Service } from "typedi";
 import { ForbiddenError, NotFoundError, BadRequestError } from "routing-controllers";
+@Service()
 export class CommentService {
-  @Service()
   private commentRepo = AppDataSource.getRepository(Comment);
   private newsRepo = AppDataSource.getRepository(News);
 

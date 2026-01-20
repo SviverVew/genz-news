@@ -5,12 +5,11 @@ import { NewDto ,UpdateNewsDTO} from "../dtos/NewDto";
 import { UpdateUserDTO } from "../dtos/UserDTO";
 import { AuthMiddleware } from "../middlewares/authMiddleware";
 import { User } from "../entities/UserEntity";
-
+@Service()
 @JsonController("/news")
 export class NewsController {
-  
   constructor(private newsService: NewsService) {}
-  @Service()
+  
   @Post("/")
   @UseBefore(AuthMiddleware)
   async create(@Body() body: NewDto, @CurrentUser() user: any) {

@@ -5,12 +5,12 @@ import { CreateUserDTO, LoginUserDTO, VerifyUserDTO } from "../dtos/UserDTO";
 import { plainToInstance } from "class-transformer";
 import { validateOrReject } from "class-validator";
 import { Verify } from "crypto";
-
+@Service()
 @JsonController("/auth")
 export class AuthController {
   // private authService = new AuthService();
   constructor(private authService:AuthService) {}
-  @Service()
+
   @Post("/login")
   async login(@Body() body: LoginUserDTO) {
     const { email, password } = body;
