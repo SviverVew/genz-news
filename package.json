@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
+    "build": "tsc",
     "dev": "concurrently \"ts-node -r tsconfig-paths/register src/app.ts\" \"ts-node -r tsconfig-paths/register src/workers/EmailWorker.ts\"",
     "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js",
     "migration:run": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:run -d src/data-source.ts",
@@ -10,7 +11,6 @@
     "start": "concurrently \"node dist/app.js\" \"node dist/workers/EmailWorker.js\""
   },
   "keywords": [],
-  "build": "tsc",
 
   "author": "",
   "license": "ISC",
