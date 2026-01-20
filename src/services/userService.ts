@@ -11,9 +11,9 @@ import { AuthMiddleware } from "../middlewares/authMiddleware";
 import { redis } from "../utils/redisClient";
 import jwt from "jsonwebtoken";
 import { UserAdvance } from "../entities/UserAdvanceEntity";
-export class UserService {
+@Service()
 
-  @Service()
+export class UserService {
   private userRepo = AppDataSource.getRepository(User);
   private userAdvanceRepo = AppDataSource.getRepository(UserAdvance);
   async update(id: number, data: Partial<UserAdvance>) {
