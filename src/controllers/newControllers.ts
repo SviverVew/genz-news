@@ -38,6 +38,7 @@ export class NewsController {
   }
 
   @Get("/:id")
+  @UseBefore(AuthMiddleware)
   async getDetail(@Param("id") id: number) {
     const newsDetail = await this.newsService.getNewsDetail(id);
     return newsDetail;
