@@ -38,16 +38,27 @@ export class AuthService {
     subject: "Verify your account",
     text: `Hello ${data.name}, your OTP code is: ${otp}`,
   });
+  console.log(`Job added to queue for ${data.email}`);
 
   return { message: "User registered. Please check email for OTP." };
 }
 
 
   async verify(email: string, otp: string) {
+  console.log(`Verifying email: ${email}, otp: ${otp}`);
   const pendingUserStr = await redis.get(`pendingUser:${email}`);
+  console.log(`Pending user str: ${JSON.stringify(pendingUserStr)}`);
+  console.log(`Type: ${typeof pendingUserStr}`);
   if (!pendingUserStr) throw new Error("OTP expired or not found");
 
-  const pendingUser = JSON.parse(pendingUserStr as string);
+  let pendingUser;
+  if (typeof pendingUserStr === 'string') {
+    pendingUser = JSON.parse(pendingUserStr);
+  } else {
+    // Nếu là object, dùng trực tiếp
+    pendingUser = pendingUserStr;
+  }
+  console.log(`Pending user otp: ${pendingUser.otp}`);
 
   if (pendingUser.otp !== otp) throw new Error("Invalid OTP");
 
