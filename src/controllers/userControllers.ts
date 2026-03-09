@@ -1,17 +1,17 @@
 import {
-  JsonController, Get, Post, Put, Delete, Param, Body,
-  UseBefore
+  JsonController, Get, Put, Param, Body,
+  UseBefore, Req
 } from "routing-controllers";
 import { plainToInstance } from "class-transformer";
 import { validateOrReject } from "class-validator";
 import { UserService } from "../services/userService";
-import { CreateUserDTO, UpdateUserDTO,ChangePasswordDTO } from "../dtos/UserDTO";
+import { UpdateUserDTO,ChangePasswordDTO } from "../dtos/UserDTO";
 import { AuthMiddleware } from "../middlewares/authMiddleware";
 import { Service } from "typedi";
 @Service()
 @JsonController("/users")
 export class UserController {
-  constructor(private userService:UserService) {}
+  constructor(private readonly userService:UserService) {}
   @Put("/:id")
   @UseBefore(AuthMiddleware)
   async update(@Param("id") id: number, @Body() body: UpdateUserDTO) {
@@ -29,5 +29,12 @@ export class UserController {
     @Body() body: ChangePasswordDTO
   ) {
     return this.userService.changePassword(id, body);
+  }
+
+  @Get("/me")
+  @UseBefore(AuthMiddleware)
+  async getMe(@Req() req: any) {
+    const userId = req.user.userId;
+    return this.userService.getUser(userId);
   }
 }

@@ -1,21 +1,16 @@
-import {
-  JsonController, Get, Post, Put, Delete, Param, Body,
-  UseBefore
-} from "routing-controllers";
 import { AppDataSource } from "../data-source";
 import { ChangePasswordDTO } from "../dtos/UserDTO";
 import { User } from "../entities/UserEntity";
 import bcrypt from "bcrypt";
 import { Service ,} from "typedi";
-import { AuthMiddleware } from "../middlewares/authMiddleware";
 import { redis } from "../utils/redisClient";
 import jwt from "jsonwebtoken";
 import { UserAdvance } from "../entities/UserAdvanceEntity";
 @Service()
 
 export class UserService {
-  private userRepo = AppDataSource.getRepository(User);
-  private userAdvanceRepo = AppDataSource.getRepository(UserAdvance);
+  private readonly userRepo = AppDataSource.getRepository(User);
+  private readonly userAdvanceRepo = AppDataSource.getRepository(UserAdvance);
   async update(id: number, data: Partial<UserAdvance>) {
     await this.userAdvanceRepo.update(id, data);
     return this.userAdvanceRepo.findOne({ where: { userId: id } });
@@ -73,6 +68,14 @@ export class UserService {
     };
   }
 
+  async getUser(userId: number) {
+    const user = await this.userRepo.findOne({
+      where: { userId },
+      relations: ['userAdvance']
+    });
+    if (!user) throw new Error("User not found");
+    return user;
+  }
 
 }
 
