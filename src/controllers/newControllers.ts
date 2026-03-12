@@ -16,6 +16,15 @@ export class NewsController {
     // giả sử middleware auth đã inject userId vào @CurrentUser
     return this.newsService.createNews(body, user.userId);
   }
+ 
+  @Get("/")
+  async getNews(
+    @QueryParam("cursor") cursor?: string,
+    @QueryParam("limit") limit?: number,
+  ) {
+    const limitNum = limit ? Number(limit) : 10;
+    return this.newsService.getNewsWithCursor(cursor, limitNum);
+  }
   @Get("/category")
   async getByCategory(
     @QueryParam("category") category: string,

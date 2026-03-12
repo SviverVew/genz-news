@@ -1,5 +1,5 @@
 import { Service } from "typedi";
-import { In } from "typeorm";
+import { In, LessThan } from "typeorm";
 import { AppDataSource } from "../data-source";
 import { News } from "../entities/NewEntity";
 import { User } from "../entities/UserEntity";
@@ -90,6 +90,50 @@ export class NewsService {
     await redis.set(cacheKey, news, { ex: 86400 });
 
     return { ...news, totalComment };
+  }
+
+  async getNewsWithCursor(cursor?: string, limit = 10) {
+    const where: any = { status: "Xuất bản" };
+
+    if (cursor) {
+      const cursorDate = new Date(cursor);
+      if (!isNaN(cursorDate.getTime())) {
+        where.datetime = LessThan(cursorDate);
+      }
+    }
+
+    const newsList = await this.newsRepo.find({
+      where,
+      relations: ["user"],
+      order: { datetime: "DESC" },
+      take: limit,
+    });
+
+    const data = await Promise.all(
+      newsList.map(async (news) => {
+        const totalComment = await this.commentRepo.count({
+          where: { news: { newsId: news.newsId }, isHidden: false },
+        });
+
+        return {
+          newsId: news.newsId,
+          title: news.title,
+          description: news.description,
+          thumbnail: news.thumbnail,
+          author: news.user.name,
+          totalComment,
+        };
+      })
+    );
+
+    const lastItem = newsList[newsList.length - 1];
+    const nextCursor = lastItem ? lastItem.datetime.toISOString() : null;
+
+    return {
+      data,
+      nextCursor,
+      hasMore: !!nextCursor,
+    };
   }
 
   async getNewsByCategory(category: string, page = 1, limit = 10) {
