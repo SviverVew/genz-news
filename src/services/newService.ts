@@ -1,5 +1,5 @@
 import { Service } from "typedi";
-import { In, LessThan } from "typeorm";
+import { In } from "typeorm";
 import { AppDataSource } from "../data-source";
 import { News } from "../entities/NewEntity";
 import { User } from "../entities/UserEntity";
@@ -92,22 +92,37 @@ export class NewsService {
     return { ...news, totalComment };
   }
 
-  async getNewsWithCursor(cursor?: string, limit = 10) {
-    const where: any = { status: "Xuất bản" };
+  async getNewsWithCursor(cursor?: string, limit = 6) {
+    const qb = this.newsRepo
+      .createQueryBuilder("news")
+      .leftJoinAndSelect("news.user", "user")
+      .where("news.status = :status", { status: "Xuất bản" })
+      .orderBy("news.datetime", "DESC")
+      .addOrderBy("news.newsId", "DESC")
+      .take(limit);
 
     if (cursor) {
-      const cursorDate = new Date(cursor);
-      if (!isNaN(cursorDate.getTime())) {
-        where.datetime = LessThan(cursorDate);
+      const cursorId = Number(cursor);
+      if (!Number.isFinite(cursorId) || cursorId <= 0) {
+        throw new Error("Invalid cursor. Expected last item's newsId.");
       }
+
+      const cursorNews = await this.newsRepo.findOne({
+        where: { newsId: cursorId, status: "Xuất bản" },
+        select: ["newsId", "datetime"],
+      });
+      if (!cursorNews) throw new Error("Cursor news not found");
+
+      qb.andWhere(
+        "(news.datetime < :cursorDatetime OR (news.datetime = :cursorDatetime AND news.newsId < :cursorId))",
+        {
+          cursorDatetime: cursorNews.datetime,
+          cursorId,
+        }
+      );
     }
 
-    const newsList = await this.newsRepo.find({
-      where,
-      relations: ["user"],
-      order: { datetime: "DESC" },
-      take: limit,
-    });
+    const newsList = await qb.getMany();
 
     const data = await Promise.all(
       newsList.map(async (news) => {
@@ -127,7 +142,7 @@ export class NewsService {
     );
 
     const lastItem = newsList[newsList.length - 1];
-    const nextCursor = lastItem ? lastItem.datetime.toISOString() : null;
+    const nextCursor = lastItem ? String(lastItem.newsId) : null;
 
     return {
       data,

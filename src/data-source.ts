@@ -13,6 +13,12 @@ export const AppDataSource = new DataSource({
   database: config.db.database,
   synchronize: false,   
   logging: false,
+  // mysql2 pool options (prevents exceeding low max_user_connections on shared DBs)
+  extra: {
+    connectionLimit: Number(process.env.DB_POOL_LIMIT) || 2,
+    enableKeepAlive: true,
+    keepAliveInitialDelay: 0,
+  },
   entities: [__dirname + "/entities/*.{ts,js}"],
   migrations: process.env.NODE_ENV === "production"
     ? ["dist/migrations/**/*.js"]

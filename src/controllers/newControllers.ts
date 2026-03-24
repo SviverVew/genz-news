@@ -22,7 +22,7 @@ export class NewsController {
     @QueryParam("cursor") cursor?: string,
     @QueryParam("limit") limit?: number,
   ) {
-    const limitNum = limit ? Number(limit) : 10;
+    const limitNum = limit ? Number(limit) : 6;
     return this.newsService.getNewsWithCursor(cursor, limitNum);
   }
   @Get("/category")
