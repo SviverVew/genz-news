@@ -18,8 +18,9 @@ export class NewDto {
   content!: string;
 
   @Expose()
+  @IsOptional()
   @MaxLength(2048)
-  thumbnail!: string;
+  thumbnail?: string;
 
   @Expose()
   @MaxLength(125)

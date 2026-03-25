@@ -1,10 +1,11 @@
-import {JsonController, QueryParams,Post, Body, CurrentUser, UseBefore, Param, Get, QueryParam, Patch, HttpCode } from "routing-controllers";
+import {JsonController, QueryParams,Post, Body, CurrentUser, UseBefore, Param, Get, QueryParam, Patch, HttpCode, UploadedFile } from "routing-controllers";
 import { Service } from "typedi";
 import { NewsService } from "../services/newService";
 import { NewDto ,UpdateNewsDTO} from "../dtos/NewDto";
 import { UpdateUserDTO } from "../dtos/UserDTO";
 import { AuthMiddleware } from "../middlewares/authMiddleware";
 import { User } from "../entities/UserEntity";
+import multer from "multer";
 @Service()
 @JsonController("/news")
 export class NewsController {
@@ -12,11 +13,25 @@ export class NewsController {
   
   @Post("/")
   @UseBefore(AuthMiddleware)
-  async create(@Body() body: NewDto, @CurrentUser() user: any) {
-    // giả sử middleware auth đã inject userId vào @CurrentUser
+  async create(
+    @Body() body: NewDto,
+    @CurrentUser() user: any,
+    @UploadedFile("thumbnail", { options: { storage: multer.memoryStorage() }, required: false }) file?: Express.Multer.File
+  ) {
+    if (file) {
+      body.thumbnail = await this.newsService.uploadImage(file);
+    }
     return this.newsService.createNews(body, user.userId);
   }
- 
+
+  @Post("/upload-image")
+  @UseBefore(AuthMiddleware)
+  async uploadImage(@UploadedFile("image", { options: { storage: multer.memoryStorage() } }) file: Express.Multer.File) {
+    if (!file) throw new Error("No file uploaded");
+    const imageUrl = await this.newsService.uploadImage(file);
+    return { imageUrl };
+  }
+
   @Get("/")
   async getNews(
     @QueryParam("cursor") cursor?: string,

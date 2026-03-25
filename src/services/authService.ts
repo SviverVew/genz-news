@@ -85,11 +85,11 @@ export class AuthService {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) throw new Error("Invalid credentials");
 
-    // Access Token (hết hạn nhanh, 30s)
+    // Access Token (hết hạn nhanh, 1h)
     const accessToken = jwt.sign(
       { userId: user.userId , role: user.role},
       process.env.JWT_SECRET!,
-      { expiresIn: "100s" }
+      { expiresIn: "1h" }
     );
 
     // Refresh Token (hết hạn lâu hơn,5 ngày)
@@ -98,7 +98,7 @@ export class AuthService {
       process.env.JWT_REFRESH_SECRET!,
       { expiresIn: "5m" }
     );
-      await redis.set(`accessToken:${accessToken}`, user.userId.toString(), { ex: 30 });
+      await redis.set(`accessToken:${accessToken}`, user.userId.toString(), { ex: 3600 });
       await redis.set(`refreshToken:${refreshToken}`, user.userId.toString(), { ex: 60 * 5 });
     return { name: user.name,
     email: user.email,
@@ -119,9 +119,9 @@ export class AuthService {
     const newAccessToken = jwt.sign(
       { userId: parseInt(userId as string) },
       process.env.JWT_SECRET!,
-      { expiresIn: "100s" }
+      { expiresIn: "1h" }
     );
-    await redis.set(`accessToken:${newAccessToken}`, userId, { ex: 30 });
+    await redis.set(`accessToken:${newAccessToken}`, userId, { ex: 3600 });
     return { accessToken: newAccessToken };
   }
 

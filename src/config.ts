@@ -25,4 +25,9 @@ export const config = {
   sendgrid: {
     apiKey: process.env.SENDGRID_API_KEY || "",
   },
+  cloudinary: {
+    cloudName: process.env.CLOUDINARY_CLOUD_NAME || "",
+    apiKey: process.env.CLOUDINARY_API_KEY || "",
+    apiSecret: process.env.CLOUDINARY_API_SECRET || "",
+  },
 };

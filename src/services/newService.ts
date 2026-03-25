@@ -8,6 +8,7 @@ import { NewDto } from "../dtos/NewDto";
 import { plainToInstance } from "class-transformer";
 import { validateOrReject } from "class-validator";
 import { redis, updateCache } from "../utils/redisClient";
+import { cloudinary } from "../utils/cloudinary";
 
 @Service()
 export class NewsService {
@@ -34,6 +35,22 @@ export class NewsService {
     await redis.set(`news:${saved.newsId}`, saved, { ex: 86400 });
 
     return saved;
+  }
+
+  async uploadImage(file: Express.Multer.File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        { folder: 'news-thumbnails' },
+        (error, result) => {
+          if (error) {
+            reject(new Error('Upload failed: ' + error.message));
+          } else {
+            resolve(result!.secure_url);
+          }
+        }
+      );
+      stream.end(file.buffer);
+    });
   }
 
   async updateNews(newsId: number, payload: Partial<News>, currentUser: User) {
