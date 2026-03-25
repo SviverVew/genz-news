@@ -199,6 +199,75 @@ export class NewsService {
     return { data, pagination: { page, limit, total } };
   }
 
+  async searchNews(query: string, page = 1, limit = 10) {
+    if (!query || query.trim().length === 0) {
+      throw new Error("Query is required");
+    }
+
+    const skip = (page - 1) * limit;
+
+    const qb = this.newsRepo
+      .createQueryBuilder("news")
+      .leftJoinAndSelect("news.user", "user")
+      .where("news.status = :status", { status: "Xuất bản" })
+      .andWhere("MATCH(news.title, news.content) AGAINST(:query IN NATURAL LANGUAGE MODE)", { query })
+      .orderBy("news.datetime", "DESC")
+      .skip(skip)
+      .take(limit);
+
+    const [newsList, total] = await qb.getManyAndCount();
+
+    const data = await Promise.all(
+      newsList.map(async (news) => {
+        const totalComment = await this.commentRepo.count({
+          where: { news: { newsId: news.newsId }, isHidden: false },
+        });
+
+        return {
+          newsId: news.newsId,
+          title: news.title,
+          description: news.description,
+          thumbnail: news.thumbnail,
+          author: news.user.name,
+          totalComment,
+        };
+      })
+    );
+
+    return { data, pagination: { page, limit, total } };
+  }
+
+  async getMyNews(userId: number, page = 1, limit = 10) {
+    const skip = (page - 1) * limit;
+
+    const [newsList, total] = await this.newsRepo.findAndCount({
+      where: { user: { userId }, status: "Xuất bản" },
+      relations: ["user"],
+      order: { datetime: "DESC" },
+      skip,
+      take: limit,
+    });
+
+    const data = await Promise.all(
+      newsList.map(async (news) => {
+        const totalComment = await this.commentRepo.count({
+          where: { news: { newsId: news.newsId }, isHidden: false },
+        });
+
+        return {
+          newsId: news.newsId,
+          title: news.title,
+          description: news.description,
+          thumbnail: news.thumbnail,
+          author: news.user.name,
+          totalComment,
+        };
+      })
+    );
+
+    return { data, pagination: { page, limit, total } };
+  }
+
   private viewedKey(userId: number) {
     return `user:${userId}:viewedNews`;
   }

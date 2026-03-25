@@ -52,6 +52,19 @@ export class NewsController {
 
     return this.newsService.getNewsByCategory(category, pageNum, limitNum);
   }
+
+  @Get("/search")
+  async searchNews(
+    @QueryParam("q") query: string,
+    @QueryParam("page") page: number,
+    @QueryParam("limit") limit: number
+  ) {
+    if (!query) throw new Error("Query parameter 'q' is required");
+    const pageNum = page ? Number(page) : 1;
+    const limitNum = limit ? Number(limit) : 10;
+
+    return this.newsService.searchNews(query, pageNum, limitNum);
+  }
   @Patch("/:id")
   @UseBefore(AuthMiddleware)
   async update(
@@ -107,6 +120,17 @@ export class NewsController {
     @QueryParam("limit") limit: number = 10
   ) {
     const data = await this.newsService.getSavedNews(user.userId, page, limit);
+    return { data, page, limit };
+  }
+
+  @Get("/my-news")
+  @UseBefore(AuthMiddleware)
+  async getMyNews(
+    @CurrentUser() user: User,
+    @QueryParam("page") page: number = 1,
+    @QueryParam("limit") limit: number = 10
+  ) {
+    const data = await this.newsService.getMyNews(user.userId, page, limit);
     return { data, page, limit };
   }
 }

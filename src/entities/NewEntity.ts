@@ -6,10 +6,12 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   JoinColumn,
+  Index,
 } from "typeorm";
 import { User } from "./UserEntity";
 
 @Entity("news")
+@Index(["title", "content"], { fulltext: true })
 export class News {
   @PrimaryGeneratedColumn()
   newsId: number;
