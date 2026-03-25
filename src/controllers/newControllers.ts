@@ -32,56 +32,7 @@ export class NewsController {
     return { imageUrl };
   }
 
-  @Get("/")
-  async getNews(
-    @QueryParam("cursor") cursor?: string,
-    @QueryParam("limit") limit?: number,
-  ) {
-    const limitNum = limit ? Number(limit) : 6;
-    return this.newsService.getNewsWithCursor(cursor, limitNum);
-  }
-  @Get("/category")
-  async getByCategory(
-    @QueryParam("category") category: string,
-    @QueryParam("page") page: number,
-    @QueryParam("limit") limit: number
-  ) {
-    if (!category) throw new Error("Category is required");
-    const pageNum = page ? Number(page) : 1;
-    const limitNum = limit ? Number(limit) : 10;
-
-    return this.newsService.getNewsByCategory(category, pageNum, limitNum);
-  }
-
-  @Get("/search")
-  async searchNews(
-    @QueryParam("q") query: string,
-    @QueryParam("page") page: number,
-    @QueryParam("limit") limit: number
-  ) {
-    if (!query) throw new Error("Query parameter 'q' is required");
-    const pageNum = page ? Number(page) : 1;
-    const limitNum = limit ? Number(limit) : 10;
-
-    return this.newsService.searchNews(query, pageNum, limitNum);
-  }
-  @Patch("/:id")
-  @UseBefore(AuthMiddleware)
-  async update(
-    @Param("id") newsId: number,
-    @Body() body: UpdateNewsDTO,
-    @CurrentUser() user: User
-  ) {
-    return this.newsService.updateNews(newsId, body, user);
-  }
-
-  @Get("/:id")
-  async getDetail(@Param("id") id: number) {
-    const newsDetail = await this.newsService.getNewsDetail(id);
-    return newsDetail;
-  }
-
-  @Post("/viewed/:newsId")
+@Post("/viewed/:newsId")
   @UseBefore(AuthMiddleware)
   async addViewedNews(
     @Param("newsId") newsId: number,
@@ -133,4 +84,55 @@ export class NewsController {
     const data = await this.newsService.getMyNews(user.userId, page, limit);
     return { data, page, limit };
   }
+
+  @Get("/")
+  async getNews(
+    @QueryParam("cursor") cursor?: string,
+    @QueryParam("limit") limit?: number,
+  ) {
+    const limitNum = limit ? Number(limit) : 6;
+    return this.newsService.getNewsWithCursor(cursor, limitNum);
+  }
+  @Get("/category")
+  async getByCategory(
+    @QueryParam("category") category: string,
+    @QueryParam("page") page: number,
+    @QueryParam("limit") limit: number
+  ) {
+    if (!category) throw new Error("Category is required");
+    const pageNum = page ? Number(page) : 1;
+    const limitNum = limit ? Number(limit) : 10;
+
+    return this.newsService.getNewsByCategory(category, pageNum, limitNum);
+  }
+
+  @Get("/search")
+  async searchNews(
+    @QueryParam("q") query: string,
+    @QueryParam("page") page: number,
+    @QueryParam("limit") limit: number
+  ) {
+    if (!query) throw new Error("Query parameter 'q' is required");
+    const pageNum = page ? Number(page) : 1;
+    const limitNum = limit ? Number(limit) : 10;
+
+    return this.newsService.searchNews(query, pageNum, limitNum);
+  }
+  @Patch("/:id")
+  @UseBefore(AuthMiddleware)
+  async update(
+    @Param("id") newsId: number,
+    @Body() body: UpdateNewsDTO,
+    @CurrentUser() user: User
+  ) {
+    return this.newsService.updateNews(newsId, body, user);
+  }
+
+  @Get("/:id")
+  async getDetail(@Param("id") id: number) {
+    const newsDetail = await this.newsService.getNewsDetail(id);
+    return newsDetail;
+  }
+
+  
 }
