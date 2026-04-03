@@ -278,6 +278,7 @@ export class NewsService {
 
   async addViewedNews(userId: number, newsId: number) {
     const key = this.viewedKey(userId);
+    await redis.lrem(key, 0, newsId.toString());
     await redis.lpush(key, newsId.toString());
     await redis.ltrim(key, 0, 999);
     await redis.expire(key, 60 * 60 * 24 * 30);
