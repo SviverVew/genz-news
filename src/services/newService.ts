@@ -24,8 +24,6 @@ export class NewsService {
 
     const user = await this.userRepo.findOneBy({ userId });
     if (!user) throw new Error("User không tồn tại");
-    if (user.role !== "Admin" && user.role !== "Moderator")
-      throw new Error("Không có quyền đăng bài");
 
     const news = this.newsRepo.create({
       ...newsDto,
