@@ -1,8 +1,7 @@
-import {JsonController, QueryParams,Post, Body, CurrentUser, UseBefore, Param, Get, QueryParam, Patch, HttpCode, UploadedFile } from "routing-controllers";
+import {JsonController, Post, Body, CurrentUser, UseBefore, Param, Get, QueryParam, Patch, UploadedFile } from "routing-controllers";
 import { Service } from "typedi";
 import { NewsService } from "../services/newService";
 import { NewDto ,UpdateNewsDTO} from "../dtos/NewDto";
-import { UpdateUserDTO } from "../dtos/UserDTO";
 import { AuthMiddleware } from "../middlewares/authMiddleware";
 import { User } from "../entities/UserEntity";
 import multer from "multer";
@@ -134,5 +133,36 @@ export class NewsController {
     return newsDetail;
   }
 
-  
+  // Nhà báo uy tín
+  @Get("/trending/journalists-by-news")
+  async getTopJournalistsByNews(@QueryParam("limit") limit: number = 10) {
+    return this.newsService.getTopJournalistsByNewsCount(limit);
+  }
+
+  @Get("/trending/journalists-by-rating")
+  async getTopJournalistsByRating(@QueryParam("limit") limit: number = 10) {
+    return this.newsService.getTopJournalistsByRating(limit);
+  }
+
+  @Post("/rating/journalist/:journalistId")
+  @UseBefore(AuthMiddleware)
+  async rateJournalist(
+    @Param("journalistId") journalistId: number,
+    @Body() body: { rating: number; comment?: string },
+    @CurrentUser() user: User
+  ) {
+    const result = await this.newsService.rateJournalist(
+      journalistId,
+      user.userId,
+      body.rating,
+      body.comment
+    );
+    return { message: "Đánh giá nhà báo thành công", data: result };
+  }
+
+  @Get("/rating/journalist/:journalistId")
+  async getJournalistStats(@Param("journalistId") journalistId: number) {
+    return this.newsService.getJournalistRatingStats(journalistId);
+  }
 }
+

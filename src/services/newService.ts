@@ -4,6 +4,7 @@ import { AppDataSource } from "../data-source";
 import { News } from "../entities/NewEntity";
 import { User } from "../entities/UserEntity";
 import { Comment } from "../entities/CommentEntity";
+import { JournalistRating } from "../entities/JournalistRatingEntity";
 import { NewDto } from "../dtos/NewDto";
 import { plainToInstance } from "class-transformer";
 import { validateOrReject } from "class-validator";
@@ -15,6 +16,7 @@ export class NewsService {
   private newsRepo = AppDataSource.getRepository(News);
   private userRepo = AppDataSource.getRepository(User);
   private commentRepo = AppDataSource.getRepository(Comment);
+  private ratingRepo = AppDataSource.getRepository(JournalistRating);
 
   async createNews(dto: any, userId: number) {
     const newsDto = plainToInstance(NewDto, dto, { excludeExtraneousValues: true });
@@ -316,5 +318,150 @@ export class NewsService {
       .slice((page - 1) * limit, page * limit);
 
     return this.newsRepo.find({ where: { newsId: In(sliced) } });
+  }
+
+  // Lấy top 10 nhà báo đăng nhiều bài báo nhất
+  async getTopJournalistsByNewsCount(limit = 10) {
+    const cacheKey = "top:journalists:by:news:count";
+    let cached = await redis.get<any>(cacheKey);
+
+    if (cached) return cached;
+
+    const journalists = await this.newsRepo
+      .createQueryBuilder("news")
+      .select("news.userId", "userId")
+      .addSelect("user.name", "name")
+      .addSelect("COUNT(news.newsId)", "newsCount")
+      .leftJoin("news.user", "user")
+      .where("news.status = :status", { status: "Xuất bản" })
+      .groupBy("news.userId")
+      .orderBy("COUNT(news.newsId)", "DESC")
+      .limit(limit)
+      .getRawMany();
+
+    const result = journalists.map(j => ({
+      userId: j.userId,
+      name: j.name,
+      newsCount: parseInt(j.newsCount),
+    }));
+
+    await redis.set(cacheKey, result, { ex: 3600 }); // Cache 1 giờ
+    return result;
+  }
+
+  // Lấy top 10 nhà báo được xếp hạng tốt nhất
+  async getTopJournalistsByRating(limit = 10) {
+    const cacheKey = "top:journalists:by:rating";
+    let cached = await redis.get<any>(cacheKey);
+
+    if (cached) return cached;
+
+    const journalists = await this.ratingRepo
+      .createQueryBuilder("rating")
+      .select("rating.journalistId", "journalistId")
+      .addSelect("user.name", "name")
+      .addSelect("AVG(rating.rating)", "avgRating")
+      .addSelect("COUNT(rating.ratingId)", "totalRatings")
+      .leftJoin("rating.journalist", "user")
+      .groupBy("rating.journalistId")
+      .having("COUNT(rating.ratingId) >= 3") // Tối thiểu 3 đánh giá
+      .orderBy("AVG(rating.rating)", "DESC")
+      .limit(limit)
+      .getRawMany();
+
+    const result = journalists.map(j => ({
+      journalistId: j.journalistId,
+      name: j.name,
+      avgRating: parseFloat(j.avgRating).toFixed(2),
+      totalRatings: parseInt(j.totalRatings),
+    }));
+
+    await redis.set(cacheKey, result, { ex: 3600 }); // Cache 1 giờ
+    return result;
+  }
+
+  // User xếp hạng nhà báo
+  async rateJournalist(
+    journalistId: number,
+    ratedById: number,
+    rating: number,
+    comment?: string
+  ) {
+    if (rating < 1 || rating > 5) throw new Error("Rating phải trong khoảng 1-5");
+    if (journalistId === ratedById)
+      throw new Error("Không thể tự xếp hạng");
+
+    const journalist = await this.userRepo.findOneBy({ userId: journalistId });
+    if (!journalist) throw new Error("Nhà báo không tồn tại");
+
+    const ratedBy = await this.userRepo.findOneBy({ userId: ratedById });
+    if (!ratedBy) throw new Error("User không tồn tại");
+
+    // Kiểm tra xem user đã xếp hạng nhà báo này chưa
+    let ratingRecord = await this.ratingRepo.findOne({
+      where: { journalistId, ratedById },
+    });
+
+    if (!ratingRecord) {
+      ratingRecord = this.ratingRepo.create({
+        journalist,
+        journalistId,
+        ratedBy,
+        ratedById,
+        rating,
+        comment: comment || "",
+      });
+    } else {
+      ratingRecord.rating = rating;
+      ratingRecord.comment = comment || "";
+    }
+
+    const saved = await this.ratingRepo.save(ratingRecord);
+
+    // Xóa cache khi có thay đổi
+    await redis.del("top:journalists:by:rating");
+
+    return saved;
+  }
+
+  // Lấy thống kê xếp hạng của nhà báo
+  async getJournalistRatingStats(journalistId: number) {
+    const stats = await this.ratingRepo
+      .createQueryBuilder("rating")
+      .select("AVG(rating.rating)", "avgRating")
+      .addSelect("COUNT(rating.ratingId)", "totalRatings")
+      .where("rating.journalistId = :journalistId", { journalistId })
+      .getRawOne();
+
+    const journalist = await this.userRepo.findOneBy({ userId: journalistId });
+    const newsCount = await this.newsRepo.count({
+      where: { user: { userId: journalistId }, status: "Xuất bản" },
+    });
+
+    const reviews = await this.ratingRepo.find({
+      where: { journalistId },
+      relations: ["ratedBy"],
+      order: { created_at: "DESC" },
+      take: 10,
+    });
+
+    return {
+      journalist: {
+        userId: journalist?.userId,
+        name: journalist?.name,
+      },
+      newsCount,
+      rating: {
+        avgRating: stats.avgRating ? parseFloat(stats.avgRating).toFixed(2) : 0,
+        totalRatings: stats.totalRatings || 0,
+      },
+      recentReviews: reviews.map(r => ({
+        ratingId: r.ratingId,
+        rating: r.rating,
+        comment: r.comment,
+        ratedBy: r.ratedBy.name,
+        date: r.created_at,
+      })),
+    };
   }
 }
