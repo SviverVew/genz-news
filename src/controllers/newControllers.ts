@@ -1,4 +1,4 @@
-import {JsonController, Post, Body, CurrentUser, UseBefore, Param, Get, QueryParam, Patch, UploadedFile } from "routing-controllers";
+import {JsonController, Post, Body, CurrentUser, UseBefore, Param, Get, QueryParam, Patch, UploadedFile, Delete } from "routing-controllers";
 import { Service } from "typedi";
 import { NewsService } from "../services/newService";
 import { NewDto ,UpdateNewsDTO} from "../dtos/NewDto";
@@ -125,6 +125,15 @@ export class NewsController {
     @CurrentUser() user: User
   ) {
     return this.newsService.updateNews(newsId, body, user);
+  }
+
+  @Delete("/:id")
+  @UseBefore(AuthMiddleware)
+  async delete(
+    @Param("id") newsId: number,
+    @CurrentUser() user: User
+  ) {
+    return this.newsService.deleteNews(newsId, user);
   }
 
   @Get("/:id")

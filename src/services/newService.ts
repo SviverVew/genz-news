@@ -55,11 +55,16 @@ export class NewsService {
 
   async updateNews(newsId: number, payload: Partial<News>, currentUser: User) {
     if (!currentUser) throw new Error("Unauthorized");
-    if (currentUser.role !== "Admin" && currentUser.role !== "Moderator")
-      throw new Error("Permission denied");
 
-    const existing = await this.newsRepo.findOne({ where: { newsId } });
+    const existing = await this.newsRepo.findOne({ where: { newsId }, relations: ["user"] });
     if (!existing) throw new Error("News not found");
+
+    // Cho phép chủ bài viết, Admin hoặc Moderator sửa
+    const isOwner = existing.user?.userId === currentUser.userId;
+    const isAdminOrModerator = currentUser.role === "Admin" || currentUser.role === "Moderator";
+    if (!isOwner && !isAdminOrModerator) {
+      throw new Error("Permission denied");
+    }
 
     const allowed = [
       "title",
@@ -82,6 +87,27 @@ export class NewsService {
     await updateCache(`news:${newsId}`, updated);
 
     return updated;
+  }
+
+  async deleteNews(newsId: number, currentUser: User) {
+    if (!currentUser) throw new Error("Unauthorized");
+
+    const existing = await this.newsRepo.findOne({ where: { newsId }, relations: ["user"] });
+    if (!existing) throw new Error("News not found");
+
+    // Cho phép chủ bài viết, Admin hoặc Moderator xóa
+    const isOwner = existing.user?.userId === currentUser.userId;
+    const isAdminOrModerator = currentUser.role === "Admin" || currentUser.role === "Moderator";
+    if (!isOwner && !isAdminOrModerator) {
+      throw new Error("Permission denied");
+    }
+
+    // Soft delete: update status thành "Xóa"
+    existing.status = "Xóa";
+    const updated = await this.newsRepo.save(existing);
+    await redis.del(`news:${newsId}`);
+
+    return { message: "Đã xóa bài viết thành công" };
   }
 
   async getNewsDetail(newsId: number) {
